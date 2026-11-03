@@ -22,20 +22,28 @@ jobs:
 
       - name: Prepare project
         run: |
-          mkdir -p www
-          if [ -f index.html ]; then cp index.html www/index.html; fi
-          test -f www/index.html || (echo "ไม่พบ index.html"; ls -R; exit 1)
+          mkdir -p www assets
+          cp index.html www/index.html
+          cp icon.png assets/icon-only.png
+          cp icon.png assets/icon-foreground.png
+          cp icon.png assets/icon-background.png
+          cp splash.png assets/splash.png
+          cp splash.png assets/splash-dark.png
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npm install --save-dev @capacitor/assets
           cat > capacitor.config.json <<'JSON'
           {"appId":"com.aether.tactics","appName":"Aether Tactics","webDir":"www","backgroundColor":"#07080d"}
           JSON
           npx cap add android
+          npx capacitor-assets generate --android --iconBackgroundColor '#07080d' --splashBackgroundColor '#07080d' || echo "assets skipped"
 
       - name: Landscape + fullscreen
         run: |
-          sed -i 's/<activity /<activity android:screenOrientation="sensorLandscape" /' android/app/src/main/AndroidManifest.xml
-          sed -i 's#</style>#<item name="android:windowFullscreen">true</item></style>#' android/app/src/main/res/values/styles.xml
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's/<activity/<activity android:screenOrientation="sensorLandscape"/' $M
+          sed -i 's#</style>#<item name="android:windowFullscreen">true</item></style>#g' android/app/src/main/res/values/styles.xml
+          grep -n "screenOrientation" $M
 
       - name: Build debug APK
         run: |
